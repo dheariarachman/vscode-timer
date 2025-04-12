@@ -9,15 +9,35 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [
-    "*"
-  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dheariarachman/vscode-timer.git"
+  },
   "main": "./out/extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "contributes": {
     "commands": [
       {
-        "command": "task-timer-management.helloWorld",
-        "title": "Hello World"
+        "command": "extension.startTimer",
+        "title": "TaskTime: Start Timer"
+      },
+      {
+        "command": "extension.stopTimer",
+        "title": "TaskTime: Stop Timer"
+      },
+      {
+        "command": "extension.showTracking",
+        "title": "TaskTime: Show Current Tracking"
+      },
+      {
+        "command": "extension.showActiveTimers",
+        "title": "TaskTime: Show Active Timers"
+      },
+      {
+        "command": "extension.showDailySummary",
+        "title": "TaskTime: Show Daily Time Summary"
       }
     ]
   },
@@ -30,19 +50,17 @@
     "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/mocha": "^10.0.10",
-    "@types/node": "20.x",
-    "@types/nodemailer": "^6.4.17",
-    "@types/vscode": "^1.99.0",
-    "@typescript-eslint/eslint-plugin": "^8.28.0",
-    "@typescript-eslint/parser": "^8.28.0",
-    "@vscode/test-cli": "^0.0.10",
-    "@vscode/test-electron": "^2.4.1",
-    "eslint": "^9.23.0",
-    "typescript": "^5.8.2"
+    "@types/mocha": "^10.0.6",
+    "@types/node": "18.x",
+    "@types/vscode": "^1.87.0",
+    "@typescript-eslint/eslint-plugin": "^7.2.0",
+    "@typescript-eslint/parser": "^7.2.0",
+    "@vscode/test-cli": "^0.0.6",
+    "@vscode/test-electron": "^2.3.9",
+    "eslint": "^8.57.0",
+    "mocha": "^10.3.0",
+    "typescript": "^5.4.2"
   },
-  "dependencies": {
-    "nodemailer": "^6.10.0",
-    "sqlite3": "^5.1.7"
-  }
+  "dependencies": {},
+  "license": "MIT"
 }
