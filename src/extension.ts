@@ -7,6 +7,8 @@ interface TimeRecord {
 	project_name: string;
 	start_time: string;
 	end_time: string;
+	git_commit_hash?: string;
+	git_commit_message?: string;
 }
 
 let timeRecords: TimeRecord[] = [];
@@ -141,13 +143,16 @@ function startTracking() {
 	timer = setInterval(updateTimerDisplay, 1000); // Update status bar every second
 }
 
-function stopTracking() {
+async function stopTracking() {
 	if (timer) {
 		clearInterval(timer);
 		timer = undefined;
 	}
 	if (currentFolder && startTime) {
 		const endTime = Date.now();
+
+		// Get git information
+		const gitInfo = await getGitInfo(currentFolder);
 
 		// Add new record
 		lastId++;
@@ -156,6 +161,8 @@ function stopTracking() {
 			project_name: currentFolder.name,
 			start_time: new Date(startTime).toISOString(),
 			end_time: new Date(endTime).toISOString(),
+			git_commit_hash: gitInfo.hash,
+			git_commit_message: gitInfo.message,
 		});
 
 		saveTimeRecords();
@@ -270,11 +277,14 @@ async function showDailySummary() {
 
 		// Calculate total time per project
 		const projectTotals = new Map<string, number>();
+		let totalTimeForDay = 0;
+
 		todayRecords.forEach((record) => {
 			const startTime = new Date(record.start_time).getTime();
 			const endTime = new Date(record.end_time).getTime();
 			const duration = Math.floor((endTime - startTime) / 1000);
 
+			totalTimeForDay += duration;
 			const current = projectTotals.get(record.project_name) || 0;
 			projectTotals.set(record.project_name, current + duration);
 		});
@@ -295,54 +305,152 @@ async function showDailySummary() {
             <html>
                 <head>
                     <style>
-                        body { padding: 20px; font-family: var(--vscode-font-family); }
-                        .summary-title { margin-bottom: 20px; }
-                        .project-summary { margin-bottom: 30px; }
-                        .time-entry { margin: 10px 0; padding: 10px; background-color: var(--vscode-editor-background); }
-                        .total-time { font-weight: bold; margin-top: 20px; }
+                        body {
+                            padding: 30px;
+                            font-family: var(--vscode-font-family);
+                            color: var(--vscode-foreground);
+                            line-height: 1.6;
+                        }
+                        .container {
+                            max-width: 800px;
+                            margin: 0 auto;
+                        }
+                        .summary-title {
+                            margin-bottom: 30px;
+                            padding-bottom: 10px;
+                            border-bottom: 2px solid var(--vscode-textSeparator-foreground);
+                            color: var(--vscode-titleBar-activeBackground);
+                        }
+                        .summary-section {
+                            margin-bottom: 40px;
+                            background: var(--vscode-editor-background);
+                            padding: 20px;
+                            border-radius: 6px;
+                            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                        }
+                        .section-title {
+                            font-size: 1.2em;
+                            color: var(--vscode-titleBar-activeForeground);
+                            margin-bottom: 15px;
+                        }
+                        .project-card {
+                            background: var(--vscode-list-activeSelectionBackground);
+                            margin: 10px 0;
+                            padding: 15px;
+                            border-radius: 4px;
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                        }
+                        .time-entry {
+                            background: var(--vscode-list-hoverBackground);
+                            margin: 10px 0;
+                            padding: 15px;
+                            border-radius: 4px;
+                        }
+                        .time-entry-grid {
+                            display: grid;
+                            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                            gap: 10px;
+                        }
+                        .total-time {
+                            font-size: 1.2em;
+                            font-weight: bold;
+                            text-align: center;
+                            padding: 20px;
+                            background: var(--vscode-button-background);
+                            color: var(--vscode-button-foreground);
+                            border-radius: 4px;
+                            margin-top: 20px;
+                        }
+                        .project-name {
+                            color: var(--vscode-textLink-foreground);
+                            font-weight: bold;
+                        }
+                        .time-value {
+                            color: var(--vscode-charts-blue);
+                            font-weight: bold;
+                        }
+                        .git-hash {
+                            color: var(--vscode-charts-purple);
+                            font-weight: bold;
+                        }
+                        .git-message {
+                            color: var(--vscode-charts-orange);
+                            font-style: italic;
+                        }
                     </style>
                 </head>
                 <body>
-                    <h2 class="summary-title">Time Tracking Summary for ${today.toLocaleDateString()}</h2>
-                    <div class="project-summary">
-                        <h3>Project Totals:</h3>
-                        ${Array.from(projectTotals.entries())
-													.map(
-														([project, seconds]) =>
-															`<div class="time-entry">
-                                        <strong>${project}:</strong> ${formatTime(
-																seconds
-															)}
-                                    </div>`
-													)
-													.join('')}
-                    </div>
-                    <div class="time-entries">
-                        <h3>Detailed Entries:</h3>
-                        ${todayRecords
-													.map(
-														(record) => `
-                            <div class="time-entry">
-                                <div><strong>Project:</strong> ${
-																	record.project_name
-																}</div>
-                                <div><strong>Start:</strong> ${new Date(
-																	record.start_time
-																).toLocaleTimeString()}</div>
-                                <div><strong>End:</strong> ${new Date(
-																	record.end_time
-																).toLocaleTimeString()}</div>
-                                <div><strong>Duration:</strong> ${formatTime(
-																	Math.floor(
-																		(new Date(record.end_time).getTime() -
-																			new Date(record.start_time).getTime()) /
-																			1000
-																	)
-																)}</div>
+                    <div class="container">
+                        <h1 class="summary-title">Time Tracking Summary - ${today.toLocaleDateString()}</h1>
+                        
+                        <div class="summary-section">
+                            <h2 class="section-title">📊 Project Totals</h2>
+                            ${Array.from(projectTotals.entries())
+															.map(
+																([project, seconds]) => `
+                                    <div class="project-card">
+                                        <span class="project-name">${project}</span>
+                                        <span class="time-value">${formatTime(
+																					seconds
+																				)}</span>
+                                    </div>
+                                `
+															)
+															.join('')}
+                            <div class="total-time">
+                                Total Time Today: ${formatTime(totalTimeForDay)}
                             </div>
-                        `
-													)
-													.join('')}
+                        </div>
+
+                        <div class="summary-section">
+                            <h2 class="section-title">📝 Detailed Time Entries</h2>
+                            ${todayRecords
+															.map((record) => {
+																const duration = Math.floor(
+																	(new Date(record.end_time).getTime() -
+																		new Date(record.start_time).getTime()) /
+																		1000
+																);
+																return `
+                                    <div class="time-entry">
+                                        <div class="time-entry-grid">
+                                            <div><strong>Project:</strong> <span class="project-name">${
+																							record.project_name
+																						}</span></div>
+                                            <div><strong>Start:</strong> ${new Date(
+																							record.start_time
+																						).toLocaleTimeString()}</div>
+                                            <div><strong>End:</strong> ${new Date(
+																							record.end_time
+																						).toLocaleTimeString()}</div>
+                                            <div><strong>Duration:</strong> <span class="time-value">${formatTime(
+																							duration
+																						)}</span></div>
+                                            ${
+																							record.git_commit_hash
+																								? `
+                                                <div><strong>Commit:</strong> <span class="git-hash">${record.git_commit_hash.substring(
+																									0,
+																									7
+																								)}</span></div>
+                                            `
+																								: ''
+																						}
+                                            ${
+																							record.git_commit_message
+																								? `
+                                                <div><strong>Message:</strong> <span class="git-message">${record.git_commit_message}</span></div>
+                                            `
+																								: ''
+																						}
+                                        </div>
+                                    </div>
+                                `;
+															})
+															.join('')}
+                        </div>
                     </div>
                 </body>
             </html>
@@ -383,4 +491,33 @@ function formatTime(seconds: number): string {
 	const secsStr = `${secs}s`;
 
 	return `${hrsStr}${minsStr}${secsStr}`;
+}
+
+async function getGitInfo(
+	workspaceFolder: vscode.WorkspaceFolder
+): Promise<{ hash?: string; message?: string }> {
+	try {
+		const gitExtension = vscode.extensions.getExtension('vscode.git')?.exports;
+		if (!gitExtension) {
+			return {};
+		}
+
+		const api = gitExtension.getAPI(1);
+		const repo = api.repositories.find(
+			(repo: any) => repo.rootUri.fsPath === workspaceFolder.uri.fsPath
+		);
+
+		if (!repo) {
+			return {};
+		}
+
+		const head = repo.state.HEAD;
+		return {
+			hash: head?.commit,
+			message: head?.message,
+		};
+	} catch (error) {
+		console.error('Error getting git info:', error);
+		return {};
+	}
 }

@@ -1,63 +1,53 @@
 # Timer Tracking Extension for VS Code
 
-A Visual Studio Code extension that helps you track your working hours on projects. This extension automatically starts and stops a timer when you switch between project folders, stores the tracking data in an SQLite database, and provides a daily summary via email. Additionally, it allows you to manually start/stop the timer and displays the tracking progress in the status bar.
+A Visual Studio Code extension that helps you track your working hours on projects. This extension automatically starts and stops a timer when you switch between project folders, stores tracking data locally, and provides detailed daily summaries with Git integration.
 
 ## Features
 
-- **Automatic Timer**: Automatically starts and stops tracking time when switching between project folders.
-- **Manual Timer Control**: Start and stop the timer manually using commands.
-- **Status Bar Integration**: Displays the current project's tracking time in the status bar.
-- **SQLite Database**: Stores detailed time tracking records for each project.
-- **Daily Email Summary**: Sends a daily summary of tracked time to your email.
-- **Command Palette Support**: Use commands from the Command Palette to control the extension.
+- **Automatic Timer**: Automatically starts and stops tracking time when switching between project folders
+- **Manual Timer Control**: Start and stop the timer manually using commands
+- **Status Bar Integration**: Displays the current project's tracking time in the status bar
+- **Git Integration**: Captures Git commit information with time records
+- **Daily Summary**: View detailed daily summaries with project totals and Git commit details
+- **Command Palette Support**: Use commands from the Command Palette to control the extension
 
 ## Installation
 
 1. **Download and Install**:
 
-   - Package the extension using `vsce package` and install the `.vsix` file in VS Code.
-   - Alternatively, download the prepackaged `.vsix` file from the [Releases](#) page (link to your GitHub releases).
+   - Package the extension using `vsce package` and install the `.vsix` file in VS Code
+   - Alternatively, download the prepackaged `.vsix` file from the [Releases](#) page
 
-2. **Setup Email Configuration**:
-
-   - Update the email credentials in the extension's configuration (see below).
-
-3. **Start Tracking**:
-   - Open a project folder in VS Code, and the timer will automatically start tracking.
-
-## Configuration
-
-To send email summaries, you must configure your email credentials in the extension's settings:
-
-1. Open the **Settings** in VS Code (`Ctrl+,` or `Cmd+,` on macOS).
-2. Search for the `Timer Tracking` settings.
-3. Provide the following details:
-   - **Email Address**: The email address to send the summary from.
-   - **Password**: The password for the email account.
-   - **SMTP Server**: The SMTP server (e.g., `smtp.gmail.com`).
-   - **Recipient Email**: The email address where the summary will be sent.
+2. **Start Tracking**:
+   - Open a project folder in VS Code, and the timer will automatically start tracking
 
 ## Commands
 
 Use the following commands from the Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`):
 
-- **Start Timer**: Manually start the timer.
-- **Stop Timer**: Manually stop the timer.
-- **Show Tracking**: Display the current project's tracking details.
-- **Send Daily Summary**: Manually send the daily email summary.
+- **TaskTime: Start Timer** - Manually start the timer
+- **TaskTime: Stop Timer** - Manually stop the timer
+- **TaskTime: Show Current Tracking** - Display the current project's tracking details
+- **TaskTime: Show Active Timers** - Show detailed view of active timing sessions
+- **TaskTime: Show Daily Time Summary** - View a summary of today's tracked time
 
 ## Status Bar
 
-The status bar shows the current project's tracking progress, updating every second when the timer is active. Clicking on the status bar item opens the tracking details.
+The status bar shows the current project's tracking progress with:
 
-## Database
+- Project name
+- Elapsed time (updated every second)
+- Click to view current tracking details
 
-Time tracking data is saved in an SQLite database located in the extension's global storage path. Each entry includes:
+## Time Records
+
+Time tracking data is saved locally in JSON format and includes:
 
 - Project name
 - Start time
 - End time
-- Duration
+- Git commit hash (when available)
+- Git commit message (when available)
 
 ## Development
 
@@ -68,14 +58,35 @@ Time tracking data is saved in an SQLite database located in the extension's glo
 
 ### Running the Extension
 
-1. Clone the repository.
+1. Clone the repository
 2. Install dependencies:
    ```bash
    npm install
    ```
 3. Launch the extension in VS Code:
-   - Open the project folder in VS Code.
-   - Press `F5` to open a new VS Code window with the extension loaded.
+   - Press `F5` to open a new window with the extension loaded
+   - Use the Command Palette to try out the commands
+
+### Publishing
+
+To publish the extension:
+
+1. Create a publisher account on [Visual Studio Marketplace](https://marketplace.visualstudio.com/manage)
+2. Get a Personal Access Token (PAT) from Azure DevOps
+3. Login to vsce using your PAT:
+   ```bash
+   vsce login <publisher-name>
+   ```
+4. Set the publisher in package.json:
+   ```json
+   {
+   	"publisher": "your-publisher-name"
+   }
+   ```
+5. Publish the extension:
+   ```bash
+   vsce publish
+   ```
 
 ### Packaging
 
@@ -91,20 +102,6 @@ This will create a `.vsix` file for installation.
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
----
+## Repository
 
-Feel free to contribute or open issues on [GitHub](#) (add your link here).
-
-## Screenshots
-
-### Status Bar
-
-![Status Bar Screenshot](path/to/status-bar-screenshot.png)
-
-### Tracking Summary
-
-![Tracking Summary Screenshot](path/to/summary-screenshot.png)
-
-## Contact
-
-Created by [Your Name](mailto:your-email@example.com).
+[GitHub Repository](https://github.com/dheariarachman/vscode-timer.git)

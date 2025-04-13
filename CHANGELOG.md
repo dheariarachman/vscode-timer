@@ -14,11 +14,16 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - Added daily summary view with project-wise time tracking statistics
 - Added active timer details view
 - Implemented persistent storage of time tracking records
+- Added Git integration to track commit hashes and messages with time records
+- Added detailed daily summary view with Git commit information
+- Enhanced time tracking records with Git metadata
 
 ### Changed
 
 - Migrated from SQLite to SQL.js for better web compatibility and reduced native dependencies
 - Improved database state persistence with proper VS Code lifecycle event handling
+- Enhanced status bar display with real-time tracking information
+- Improved time record storage format to include Git information
 
 ### Fixed
 

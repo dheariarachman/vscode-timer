@@ -1,8 +1,10 @@
 {
   "name": "task-timer-management",
-  "displayName": "Task Timer Management",
-  "description": "Extension to manage the Tasks ",
-  "version": "0.0.1",
+  "displayName": "Timer Tracking Extension",
+  "description": "Track your working hours on projects automatically",
+  "version": "1.0.0",
+  "publisher": "dheariarachman",
+  "icon": "images/icon.png",
   "engines": {
     "vscode": "^1.99.0"
   },
